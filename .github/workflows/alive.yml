@@ -1,0 +1,38 @@
+name: Keep-Alive Workflow
+
+on:
+  schedule:
+    # 每月1号的凌晨2点运行一次
+    # 您可以自定义这个时间，只要保证在60天内至少运行一次即可
+    - cron: '0 2 1 * *'
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    # 授予工作流向仓库写入（push）的权限
+    permissions:
+      contents: write
+      
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # 我们需要获取完整的git历史记录来正确配置git用户
+          fetch-depth: 0
+
+      - name: Configure Git User
+        # 设置一个机器人名称和邮箱
+        # 这样在commit记录里能清晰地看到是Action提交的
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+      - name: Create Empty Commit
+        run: |
+          # 创建一个没有实际文件变动的“空提交”
+          # --allow-empty 选项是关键
+          git commit --allow-empty -m "chore: keep-alive"
+          
+      - name: Push commit
+        # 将这个空提交推送到仓库的默认分支（例如 main 或 master）
+        run: git push
